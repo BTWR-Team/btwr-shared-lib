@@ -1,7 +1,9 @@
-## v???(dev)
+## UNFINISHED
++ [WIP] General code cleanup: Refactored a lot of mixin class names and interface names from the .api package for better readability and self-explanation of what they're used for
+
+## v0.8.6
 + Added a new API event "ANIMAL_STARTLE_TICK" for animals being startled. Other mods can hook into it and define behavior
 + Added a new util class "SuffocationUtil" which has methods for checking extended cases for when a mob is suffocated
-+ [WIP] General code cleanup: Refactored a lot of mixin class names and interface names from the .api package for better readability and self-explanation of what they're used for
 
 ## v0.8.5
 + Added a new class "DisabledRecipeTypeRegistry" which allows specifying recipes by type or identifier to disable entirely. Works with vanilla and custom recipes as well
