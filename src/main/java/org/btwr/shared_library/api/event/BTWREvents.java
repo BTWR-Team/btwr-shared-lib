@@ -1,7 +1,10 @@
 package org.btwr.shared_library.api.event;
 
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.passive.AnimalEntity;
+import net.minecraft.item.ItemStack;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class BTWREvents {
@@ -43,6 +46,22 @@ public class BTWREvents {
      */
     public static final SimpleEvent<Consumer<AnimalStartleEvent>> ANIMAL_STARTLE_TICK = new SimpleEvent<>(
             handlers -> event -> handlers.forEach(c -> c.accept(event))
+    );
+
+    /**
+     * Fired on the server whenever an {@link AnimalEntity} eats an item, whether it was hand fed
+     * or picked up off the ground. Breeding items that make the animal fall in love count too.
+     * <p>
+     * Vanilla hand feeding fires it from {@code AnimalEntity#eat}. Mods with their own eating
+     * logic (like Animageddon's hunger) fire it themselves when the animal eats.
+     * <p>
+     * Handlers receive the animal and the eaten stack. It's fired before the stack is decremented,
+     * so handlers can still check what was eaten, but should only read the stack and not change it.
+     * <p>
+     * Handlers run in registration order.
+     */
+    public static final SimpleEvent<BiConsumer<AnimalEntity, ItemStack>> ANIMAL_EAT_ITEM = new SimpleEvent<>(
+            handlers -> (animal, stack) -> handlers.forEach(c -> c.accept(animal, stack))
     );
 
 }

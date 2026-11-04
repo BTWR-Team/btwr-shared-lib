@@ -2,6 +2,10 @@
 + [WIP] General code cleanup: Refactored a lot of mixin class names and interface names from the .api package for better readability and self-explanation of what they're used for
 
 ### v???(dev)
++ Added a new registry class "GrazeBehaviorRegistry" for defining what happens when animals graze on a block. Behaviors have priorities, so other mods can override the defaults
++ Added a new interface "Grazer" injected into AnimalEntity with grazing-related queries (starving, disrupts earth, rough vegetation, mycelium) that block graze rules can check
++ Added a new API event "ANIMAL_EAT_ITEM" for animals eating items, either hand fed or picked up off the ground. Fired by vanilla hand feeding and by mods with their own eating logic, so other mods can hook into it and define behavior
++ Added a new JsonBuilder class 'ShapelessRecipeWithStackJsonBuilder' for easier creation of recipes that have itemstacks for their recipe results (moved it over from BTWR-DS)
 
 ## v0.8.6
 + Added a new API event "ANIMAL_STARTLE_TICK" for animals being startled. Other mods can hook into it and define behavior

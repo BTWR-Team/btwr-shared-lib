@@ -39,7 +39,10 @@
       // class_1309 - "Injects into LivingEntity"
       "net/minecraft/class_1309": ["org/btwr/shared_library/api/entity/interfaces/added/LivingEntityAdded"],
       // class_1429 - "Injects into AnimalEntity"
-      "net/minecraft/class_1429": ["org/btwr/shared_library/api/entity/interfaces/Startleable"],
+      "net/minecraft/class_1429": [
+        "org/btwr/shared_library/api/entity/interfaces/Startleable",
+        "org/btwr/shared_library/api/entity/interfaces/Grazer"
+      ],
       // class_1657 - "Injects into PlayerEntity"
       "net/minecraft/class_1657": ["org/btwr/shared_library/api/entity/interfaces/added/PlayerEntityAdded"],
       // class_2248 - "Injects into Block"

@@ -14,10 +14,17 @@ import java.util.UUID;
 public interface Startleable {
     int btwr$getUncomfortableTick();
     void btwr$setUncomfortableTick(int value);
+
     int btwr$getStartleTime();
     void btwr$setStartleTime(int ticks);
+
     @Nullable UUID btwr$getStartledBy();
     void btwr$setStartledBy(@Nullable UUID uuid);
+
+    void btwr$onNearbyAnimalAttacked(AnimalEntity attackedAnimal, LivingEntity attackSource);
+    void btwr$onNearbyPlayerStartles(PlayerEntity player);
+    void btwr$onNearbyPlayerBlockAddOrRemove(PlayerEntity player);
+    void btwr$onNearbyFireStartAttempt(PlayerEntity player);
 
     default void btwr$startle(@Nullable UUID source, int ticks) {
         if (btwr$getStartledBy() == null) btwr$setStartledBy(source);
@@ -25,12 +32,12 @@ public interface Startleable {
     }
 
     /** Whether the base mixin should count the timer down. Mobs with their own anger timer return false. */
-    default boolean btwr$ticksStartleTimer() { return true; }
+    default boolean btwr$ticksStartleTimer() {
+        return true;
+    }
 
-    default boolean btwr$isPanicked() { return btwr$getStartledBy() != null; } // fire is checked by the mixin
-
-    void btwr$onNearbyAnimalAttacked(AnimalEntity attackedAnimal, LivingEntity attackSource);
-    void btwr$onNearbyPlayerStartles(PlayerEntity player);
-    void btwr$onNearbyPlayerBlockAddOrRemove(PlayerEntity player);
-    void btwr$onNearbyFireStartAttempt(PlayerEntity player);
+    default boolean btwr$isPanicked() {
+        // fire is checked by the mixin
+        return btwr$getStartledBy() != null;
+    }
 }

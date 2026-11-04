@@ -22,6 +22,8 @@
     "added.PlayerEntityAddedMixin",
     "block.BlockMixin",
     "block.FireBlockMixin",
+    "entity.AnimalEntityEatMixin",
+    "entity.AnimalEntityGrazerMixin",
     "entity.AnimalStartleMixin",
     "entity.FallingBlockEntityMixin",
     "item.ItemMixin",
