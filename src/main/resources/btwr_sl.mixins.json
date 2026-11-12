@@ -26,6 +26,7 @@
     "entity.AnimalEntityGrazerMixin",
     "entity.AnimalStartleMixin",
     "entity.FallingBlockEntityMixin",
+    "fluid.LavaFluidMixin",
     "item.ItemMixin",
     "item.RepairItemRecipeMixin",
     "item.ShearsItemMixin",

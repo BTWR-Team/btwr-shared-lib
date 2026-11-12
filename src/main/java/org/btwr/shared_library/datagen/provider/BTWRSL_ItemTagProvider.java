@@ -89,6 +89,19 @@ public class BTWRSL_ItemTagProvider extends FabricTagProvider.ItemTagProvider {
         getOrCreateTagBuilder(BTWRConventionalTags.Items.ADVANCED_HOES)
                 .add(Items.NETHERITE_HOE);
 
+        getOrCreateTagBuilder(BTWRConventionalTags.Items.PRIMITIVE_SHOVELS)
+                .add(Items.WOODEN_SHOVEL)
+                .add(Items.STONE_SHOVEL);
+
+        getOrCreateTagBuilder(BTWRConventionalTags.Items.MODERN_SHOVELS)
+                .add(Items.IRON_SHOVEL)
+                .add(Items.GOLDEN_SHOVEL)
+                .add(Items.DIAMOND_SHOVEL)
+                .add(Items.NETHERITE_SHOVEL);
+
+        getOrCreateTagBuilder(BTWRConventionalTags.Items.ADVANCED_SHOVELS)
+                .add(Items.NETHERITE_SHOVEL);
+
         getOrCreateTagBuilder(BTWRConventionalTags.Items.WOODEN_TOOLS)
                 .add(Items.WOODEN_AXE)
                 .add(Items.WOODEN_PICKAXE)
