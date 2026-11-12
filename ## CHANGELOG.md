@@ -1,11 +1,18 @@
 ## UNFINISHED
 + [WIP] General code cleanup: Refactored a lot of mixin class names and interface names from the .api package for better readability and self-explanation of what they're used for
 
-### v???(dev)
+### v0.9
++ Added a generic config screen kit in gui/config ("ConfigUiScreen"). A mod describes its settings in a "ConfigUiSpec" and gets a searchable screen that reflows with the game window, with no screen class of its own
 + Added a new registry class "GrazeBehaviorRegistry" for defining what happens when animals graze on a block. Behaviors have priorities, so other mods can override the defaults
 + Added a new interface "Grazer" injected into AnimalEntity with grazing-related queries (starving, disrupts earth, rough vegetation, mycelium) that block graze rules can check
 + Added a new API event "ANIMAL_EAT_ITEM" for animals eating items, either hand fed or picked up off the ground. Fired by vanilla hand feeding and by mods with their own eating logic, so other mods can hook into it and define behavior
 + Added a new JsonBuilder class 'ShapelessRecipeWithStackJsonBuilder' for easier creation of recipes that have itemstacks for their recipe results (moved it over from BTWR-DS)
++ Added "checkForFireSpreadFromLocation" to FireBlockUtils, for spreading fire from a burning source over BTW's full area
++ Changed lava to set blocks on fire directly if they support it (like unlit ovens with fuel), both when touching them from above or the sides and through its usual fire starting
++ Changed the config screen in Mod Menu to use the new config screen system from the mod and removed Cloth Config API as a soft dependency
++ Fixed the "c:primitive_tools", "c:modern_tools" and "c:advanced_tools" tags failing to load without Tough Environment, by adding the shovel tags they reference
++ Fixed FireBlockUtils only starting fires in empty spaces with a solid or flammable block below, which stopped sources like wall torches from spreading fire to the side of a flammable block
++ Updated the mod to Fabric API 0.116.18 & Fabric Loader 0.20.1
 
 ## v0.8.6
 + Added a new API event "ANIMAL_STARTLE_TICK" for animals being startled. Other mods can hook into it and define behavior
