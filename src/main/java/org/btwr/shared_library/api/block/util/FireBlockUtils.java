@@ -139,6 +139,45 @@ public class FireBlockUtils {
     }
 
     /**
+     * BTW-style fire spread from a burning source, in a 3×3 area from one block below it to four blocks above.
+     * The chance gets lower for each block above the first one.
+     */
+    public static void checkForFireSpreadFromLocation(World world, BlockPos pos, Random rand, int sourceFireAge) {
+        if (!world.getGameRules().getBoolean(GameRules.DO_FIRE_TICK)) {
+            return;
+        }
+
+        boolean isHighHumidity = world.getBiome(pos).isIn(BiomeTags.INCREASED_FIRE_BURNOUT);
+
+        int x = pos.getX();
+        int y = pos.getY();
+        int z = pos.getZ();
+
+        for (int i = x - 1; i <= x + 1; ++i) {
+            for (int k = z - 1; k <= z + 1; ++k) {
+                for (int j = y - 1; j <= y + 4; ++j) {
+                    if (i != x || j != y || k != z) {
+                        int spreadTopBound = 100;
+
+                        if (j > y + 1) {
+                            spreadTopBound += (j - (y + 1)) * 100;
+                        }
+
+                        checkForFireSpreadToOneBlockLocation(
+                                world,
+                                new BlockPos(i, j, k),
+                                rand,
+                                sourceFireAge,
+                                isHighHumidity,
+                                spreadTopBound
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * BTW-style "smouldering spread" in a 3×3×2 area around the source.
      * This is a trimmed-down version of BTW's checkForSmoulderingSpreadFromLocation.
      */
@@ -222,7 +261,8 @@ public class FireBlockUtils {
             BlockState targetState = world.getBlockState(pos);
             Block targetBlock = targetState.getBlock();
 
-            if (canFireExistAt(world, pos)) {
+            // Fire only gets here with a flammable neighbor, and it can burn on any side of one, so what's below doesn't matter
+            if (canFireReplaceBlock(world, pos)) {
                 world.setBlockState(
                         pos,
                         Blocks.FIRE.getDefaultState().with(FireBlock.AGE, startAge),
@@ -359,36 +399,6 @@ public class FireBlockUtils {
         }
 
         return false;
-    }
-
-    /**
-     * Rough "canFireExistAt" check to avoid floating fire.
-     *
-     * Semantics: fire may exist at this position iff:
-     *  - the block can be replaced (air or custom), AND
-     *  - there is either:
-     *      * a solid / full block below, or
-     *      * a flammable block below.
-     *
-     * You can extend this later to also consider side support if you want
-     * closer parity with vanilla/BW behavior.
-     */
-    private static boolean canFireExistAt(World world, BlockPos pos) {
-        if (!canFireReplaceBlock(world, pos)) {
-            return false;
-        }
-
-        BlockPos belowPos = pos.down();
-        BlockState belowState = world.getBlockState(belowPos);
-        Block belowBlock = belowState.getBlock();
-
-        // If there's a solid-ish block below, that's fine.
-        if (belowState.isSideSolidFullSquare(world, belowPos, Direction.UP)) {
-            return true;
-        }
-
-        // Or if the block below is flammable (helps fire spread), also fine.
-        return canBlockCatchFire(world, belowPos);
     }
 
     public static boolean hasFlammableNeighborsWithinSmoulderRange(World world, BlockPos pos) {

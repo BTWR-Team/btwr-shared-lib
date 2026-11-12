@@ -1,61 +1,79 @@
 package org.btwr.shared_library.config;
 
-import org.btwr.shared_library.BTWRSLModClient;
 import net.minecraft.client.gui.screen.Screen;
-import me.shedaniel.clothconfig2.api.ConfigBuilder;
-import me.shedaniel.clothconfig2.api.ConfigCategory;
-import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.text.Text;
+import org.btwr.shared_library.BTWRSLModClient;
+import org.btwr.shared_library.gui.config.ConfigUiScreen;
+import org.btwr.shared_library.gui.config.ConfigUiSpec;
+import org.btwr.shared_library.gui.config.UiSetting;
 import org.btwr.shared_library.gui.hud.PenaltyDrawMode;
+
+import java.util.List;
 
 public class SettingsGUI {
 
-    private static final BTWRSLSettings settingsCommon = BTWRSLModClient.getSettings();
     private static final String PREFIX = "config.btwrsl.draw_mode.anchor.";
 
     public static Screen createConfigScreen(Screen parent) {
-        ConfigBuilder builder = ConfigBuilder.create()
-                .setParentScreen(parent).setTitle(Text.translatable("title.btwrsl.config"));
-        builder.setSavingRunnable(() -> { BTWRSLModClient.getInstance().saveSettings(); });
+        BTWRSLSettings settings = BTWRSLModClient.getSettings();
 
-        ConfigEntryBuilder entryBuilder = builder.entryBuilder();
+        List<UiSetting<?>> penalties = List.of(
+                UiSetting.toggle(
+                        Text.translatable("config.btwrsl.hunger_override"),
+                        Text.translatable("config.btwrsl.tooltip.hunger_override"),
+                        true,
+                        () -> settings.doHungerOffsetOverride,
+                        value -> settings.doHungerOffsetOverride = value
+                ).icon(new ItemStack(Items.COOKED_BEEF)),
+                new UiSetting<>(Integer.class,
+                        Text.translatable("config.btwrsl.render_x"),
+                        Text.translatable("config.btwrsl.tooltip.render_x"),
+                        0, -100, 100,
+                        () -> settings.renderXOffset,
+                        value -> settings.renderXOffset = value
+                ).icon(new ItemStack(Items.RAIL)),
+                new UiSetting<>(Integer.class,
+                        Text.translatable("config.btwrsl.render_y"),
+                        Text.translatable("config.btwrsl.tooltip.render_y"),
+                        0, -100, 100,
+                        () -> settings.renderYOffset,
+                        value -> settings.renderYOffset = value
+                ).icon(new ItemStack(Items.LADDER)),
+                UiSetting.choice(PenaltyDrawMode.class,
+                        Text.translatable("config.btwrsl.draw_mode"),
+                        Text.translatable("config.btwrsl.tooltip.draw_mode"),
+                        PenaltyDrawMode.BTW,
+                        mode -> Text.translatable(PREFIX + mode.name()),
+                        () -> settings.drawMode,
+                        value -> settings.drawMode = value
+                ).icon(new ItemStack(Items.PAINTING)),
+                new UiSetting<>(Integer.class,
+                        Text.translatable("config.btwrsl.draw_margin"),
+                        Text.translatable("config.btwrsl.tooltip.draw_margin"),
+                        4, 0, 32,
+                        () -> settings.renderMargin,
+                        value -> settings.renderMargin = value
+                ).icon(new ItemStack(Items.ITEM_FRAME))
+                        .locked(() -> !settings.drawMode.isAnchor(), Text.translatable("config.btwrsl.locked.draw_margin"))
+        );
 
-        ConfigCategory penalties = builder.getOrCreateCategory(Text.translatable("config.btwrsl.category.penalties"));
+        ConfigUiSpec spec = new ConfigUiSpec(
+                Text.translatable("title.btwrsl.config"),
+                () -> BTWRSLModClient.getInstance().saveSettings(),
+                List.of(new ConfigUiSpec.Category(
+                        Text.translatable("title.btwrsl.category.penalties"),
+                        new ItemStack(Items.ROTTEN_FLESH),
+                        List.of(ConfigUiSpec.Section.settings(
+                                Text.translatable("title.btwrsl.category.penalties"),
+                                Text.translatable("config.btwrsl.section.penalties"),
+                                penalties
+                        ))
+                ))
+        );
 
-        /** Penalties Category **/
-        penalties.addEntry(entryBuilder
-                .startBooleanToggle(Text.translatable("config.btwrsl.hunger_override"), settingsCommon.doHungerOffsetOverride)
-                .setDefaultValue(true)
-                .setSaveConsumer(newValue -> settingsCommon.doHungerOffsetOverride = newValue)
-                .setTooltip(Text.translatable("config.btwrsl.tooltip.hunger_override"))
-                .build());
-        penalties.addEntry(entryBuilder
-                .startIntSlider(Text.translatable("config.btwrsl.render_x"), settingsCommon.renderXOffset, -100, 100)
-                .setDefaultValue(0)
-                .setSaveConsumer(newValue -> settingsCommon.renderXOffset = newValue)
-                .setTooltip(Text.translatable("config.btwrsl.tooltip.render_x"))
-                .build());
-        penalties.addEntry(entryBuilder
-                .startIntSlider(Text.translatable("config.btwrsl.render_y"), settingsCommon.renderYOffset, -100, 100)
-                .setDefaultValue(0)
-                .setSaveConsumer(newValue -> settingsCommon.renderYOffset = newValue)
-                .setTooltip(Text.translatable("config.btwrsl.tooltip.render_y"))
-                .build());
-        penalties.addEntry(entryBuilder
-                .startIntSlider(Text.translatable("config.btwrsl.draw_margin"), settingsCommon.renderMargin, 0, 32)
-                .setDefaultValue(8)
-                .setSaveConsumer(newValue -> settingsCommon.renderMargin = newValue)
-                .setTooltip(Text.translatable("config.btwrsl.tooltip.draw_margin"))
-                .build());
-        penalties.addEntry(entryBuilder
-                .startEnumSelector(Text.translatable("config.btwrsl.draw_mode"), PenaltyDrawMode.class, settingsCommon.drawMode)
-                .setDefaultValue(PenaltyDrawMode.BTW)
-                .setSaveConsumer(newValue -> settingsCommon.drawMode = newValue)
-                .setTooltip(Text.translatable("config.btwrsl.tooltip.draw_mode"))
-                .setEnumNameProvider(anEnum -> Text.translatable(PREFIX + anEnum.name()))
-                .build());
-
-        return builder.build();
+        return new ConfigUiScreen(parent, spec);
     }
 
 }

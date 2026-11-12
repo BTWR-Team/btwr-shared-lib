@@ -15,6 +15,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldAccess;
 import org.btwr.shared_library.api.crafting.FurnaceBurnTime;
+import org.btwr.shared_library.api.registry.GrazeBehaviorRegistry;
 import org.btwr.shared_library.mixin.accessors.FireBlockAccessor;
 import org.btwr.shared_library.util.utils.WorldUtils;
 import org.spongepowered.asm.mixin.Mixin;
@@ -296,22 +297,28 @@ public abstract class BlockAddedMixin implements BlockAdded {
 
     @Override
     public boolean btwr$canBeGrazedOn(WorldAccess worldAccess, BlockPos pos, AnimalEntity byAnimal) {
-        return false;
+        GrazeBehaviorRegistry.GrazeBehavior behavior = GrazeBehaviorRegistry.get((Block) (Object) this);
+        return behavior != null && behavior.canBeGrazedOn(worldAccess, pos, worldAccess.getBlockState(pos), byAnimal);
     }
 
     @Override
     public void btwr$onGrazed(World world, BlockPos pos, AnimalEntity animal) {
-        world.setBlockState(pos, Blocks.AIR.getDefaultState());
+        GrazeBehaviorRegistry.GrazeBehavior behavior = GrazeBehaviorRegistry.get((Block) (Object) this);
 
-        Block blockBelow = world.getBlockState(pos.down()).getBlock();
-
-        if (blockBelow != null) {
-            blockBelow.btwr$onVegetationAboveGrazed(world, pos.down(), animal);
+        if (behavior != null) {
+            behavior.onGrazed(world, pos, world.getBlockState(pos), animal);
+        } else {
+            GrazeBehaviorRegistry.GrazeBehavior.removeAndNotifyBelow(world, pos, animal);
         }
     }
 
     @Override
-    public void btwr$onVegetationAboveGrazed(World world, BlockPos pos, AnimalEntity animal) {}
+    public void btwr$onVegetationAboveGrazed(World world, BlockPos pos, AnimalEntity animal) {
+        GrazeBehaviorRegistry.GrazeBehavior behavior = GrazeBehaviorRegistry.get((Block) (Object) this);
+        if (behavior != null) {
+            behavior.onVegetationAboveGrazed(world, pos, world.getBlockState(pos), animal);
+        }
+    }
 
     @Override
     public void btwr$notifyNeighborsBlockDisrupted(World world, BlockPos pos) {

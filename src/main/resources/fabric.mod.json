@@ -36,11 +36,22 @@
   },
   "custom": {
     "loom:injected_interfaces": {
+      // class_1309 - "Injects into LivingEntity"
       "net/minecraft/class_1309": ["org/btwr/shared_library/api/entity/interfaces/added/LivingEntityAdded"],
+      // class_1429 - "Injects into AnimalEntity"
+      "net/minecraft/class_1429": [
+        "org/btwr/shared_library/api/entity/interfaces/Startleable",
+        "org/btwr/shared_library/api/entity/interfaces/Grazer"
+      ],
+      // class_1657 - "Injects into PlayerEntity"
       "net/minecraft/class_1657": ["org/btwr/shared_library/api/entity/interfaces/added/PlayerEntityAdded"],
+      // class_2248 - "Injects into Block"
       "net/minecraft/class_2248": ["org/btwr/shared_library/api/block/interfaces/added/BlockAdded"],
+      // class_1792 - "Injects into Item"
       "net/minecraft/class_1792": ["org/btwr/shared_library/api/item/interfaces/added/ItemAdded"],
+      // class_1799 - "Injects into ItemStack"
       "net/minecraft/class_1799": ["org/btwr/shared_library/api/item/interfaces/added/ItemStackAdded"],
+      // class_1937 - "Injects into World"
       "net/minecraft/class_1937": ["org/btwr/shared_library/api/world/interfaces/added/WorldAdded"]
     }
   },

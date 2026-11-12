@@ -18,6 +18,24 @@ public class BTWRSL_LangGenerator extends FabricLanguageProvider {
     public void generateTranslations(RegistryWrapper.WrapperLookup registryLookup, TranslationBuilder translationBuilder) {
         addTagNames(translationBuilder);
         addConfigEntries(translationBuilder);
+        addConfigUiEntries(translationBuilder);
+    }
+
+    protected void addConfigUiEntries(TranslationBuilder tb) {
+        tb.add("screen.config_ui.search", "Search this page");
+        tb.add("screen.config_ui.no_matches", "Nothing matches your search");
+        tb.add("screen.config_ui.reset", "Reset");
+        tb.add("screen.config_ui.reset.confirm", "Sure?");
+        tb.add("screen.config_ui.reset.tooltip", "Reset this page to its defaults. Click twice to confirm.");
+        tb.add("screen.config_ui.reset.done", "Page reset to its defaults");
+        tb.add("screen.config_ui.default", "Default: %s");
+        tb.add("screen.config_ui.range", "Range: %s to %s");
+        tb.add("screen.config_ui.any", "any");
+        tb.add("screen.config_ui.checked", "%s of %s checked");
+        tb.add("screen.config_ui.copied", "Copied %s");
+        tb.add("screen.config_ui.copy_hint", "Click to tick, right-click to copy the ID");
+        tb.add("screen.config_ui.locked", "Set by the server you're connected to");
+        tb.add("screen.config_ui.disabled", "Disabled");
     }
 
     protected void addTagNames(TranslationBuilder tb) {
@@ -80,20 +98,13 @@ public class BTWRSL_LangGenerator extends FabricLanguageProvider {
         addConfigEntry("render_y", "Y Offset", tb);
         addConfigEntry("draw_margin", "Draw Margin", tb);
         addConfigEntry("draw_mode", "Draw Mode", tb);
-        addConfigTooltip("hunger_override",
-                "Forces the penalty display to think the hunger\n" +
-                        "bar is being rendered. Does nothing\n" +
-                        "if the hunger bar is actually rendered.", tb);
-        addConfigTooltip("render_x",
-                "Horizontally offsets the penalty rendering by the given amount", tb);
-        addConfigTooltip("render_y",
-                "Vertically offsets the penalty rendering by the given amount", tb);
-        addConfigTooltip("draw_margin",
-                "Padding to add when drawing penalties to the screen.\n" +
-                        "Has no effect when draw mode is \"BTW\"", tb);
-        addConfigTooltip("draw_mode",
-                "Determines how penalties are drawn to the screen.\n" +
-                        "\"BTW\" emulates Better Than Wolves rendering", tb);
+        addConfigTooltip("hunger_override", "Place penalties as if the hunger bar were shown, even when it's hidden", tb);
+        addConfigTooltip("render_x", "Moves the penalty text left or right", tb);
+        addConfigTooltip("render_y", "Moves the penalty text up or down", tb);
+        addConfigTooltip("draw_margin", "Space between the penalty text and the screen edge", tb);
+        addConfigTooltip("draw_mode", "Where penalties are drawn. \"BTW\" copies Better Than Wolves", tb);
+        addConfigEntry("section.penalties", "How hunger, health and other penalties show on the HUD", tb);
+        addConfigEntry("locked.draw_margin", "Only used when Draw Mode is a screen corner", tb);
         addConfigAnchor("BTW", "BTW", tb);
         addConfigAnchor("BOTTOM_RIGHT", "Bottom Right", tb);
         addConfigAnchor("TOP_RIGHT", "Top Right", tb);
@@ -110,7 +121,7 @@ public class BTWRSL_LangGenerator extends FabricLanguageProvider {
     }
 
     protected void addConfigCategory(String key, String value, TranslationBuilder tb) {
-        tb.add("title.btwrsl.category" + key, value);
+        tb.add("title.btwrsl.category." + key, value);
     }
 
     protected void addConfigEntry(String key, String value, TranslationBuilder tb) {
