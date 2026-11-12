@@ -40,7 +40,7 @@ public abstract class FallingBlockEntityMixin extends Entity implements IFalling
      * We hook into the tick method to accumulate how far it has fallen.
      */
     @Inject(method = "tick", at = @At("HEAD"))
-    private void sturdy_trees$captureFallDistance(CallbackInfo ci) {
+    private void btwr$captureFallDistance(CallbackInfo ci) {
         // Only while in air (timeFalling > 0, but not yet landed/removed)
         if (this.timeFalling > 0 && !this.isOnGround()) {
             // Rough approximation: use timeFalling as proxy for fall distance
