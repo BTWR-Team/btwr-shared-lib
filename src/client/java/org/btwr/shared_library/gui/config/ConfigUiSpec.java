@@ -8,13 +8,19 @@ import java.util.function.Supplier;
 
 /**
  * Describes a mod's settings. This is all a mod writes: {@link ConfigUiScreen} draws it, so no mod
- * needs a screen class of its own. {@code save} runs when the screen closes.
+ * needs a screen class of its own. When the screen closes it saves the config file of every setting made
+ * with {@link UiSetting#of}, then runs {@code save}, which is only needed for settings the mod stores itself.
  */
 public record ConfigUiSpec(Text title, Runnable save, List<Category> categories) {
     public ConfigUiSpec {
         if (categories.isEmpty()) {
             throw new IllegalArgumentException("A config screen needs at least one category");
         }
+    }
+
+    /** A spec whose settings all come from {@code ConfigBuilder}, so closing the screen saves them on its own. */
+    public ConfigUiSpec(Text title, List<Category> categories) {
+        this(title, () -> {}, categories);
     }
 
     /** An entry in the left-hand rail. Its sections show as pills, unless there's only one. */

@@ -10,8 +10,13 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 
+import org.btwr.shared_library.api.config.ConfigGroup;
+
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -64,7 +69,7 @@ public final class ConfigUiScreen extends Screen {
     private Text flashMessage;
     private long flashUntil;
     private TextFieldWidget textEditor;
-    private UiSetting<String> editedSetting;
+    private Consumer<String> editCommit;
     private boolean focusTextEditor;
 
     public ConfigUiScreen(Screen parent, ConfigUiSpec spec) {
@@ -253,11 +258,16 @@ public final class ConfigUiScreen extends Screen {
 
     /** Opens a text box over a card, for String settings. */
     void editText(UiSetting<String> setting, int x, int y, int width) {
+        this.editText(setting.name(), setting.get(), 1024, setting::set, x, y, width);
+    }
+
+    /** Opens a text box over a card. {@code onCommit} gets the text when the box closes. */
+    void editText(Text name, String text, int maxLength, Consumer<String> onCommit, int x, int y, int width) {
         this.commitTextEditor();
-        TextFieldWidget editor = new TextFieldWidget(this.textRenderer, x, y, width, 16, setting.name());
-        editor.setMaxLength(1024);
-        editor.setText(setting.get());
-        this.editedSetting = setting;
+        TextFieldWidget editor = new TextFieldWidget(this.textRenderer, x, y, width, 16, name);
+        editor.setMaxLength(maxLength);
+        editor.setText(text);
+        this.editCommit = onCommit;
         this.textEditor = this.addDrawableChild(editor);
         // The click that got here focuses the grid once it finishes, so focus the box on the next frame.
         this.focusTextEditor = true;
@@ -265,10 +275,12 @@ public final class ConfigUiScreen extends Screen {
 
     private void commitTextEditor() {
         if (this.textEditor != null) {
-            this.editedSetting.set(this.textEditor.getText());
+            Consumer<String> commit = this.editCommit;
+            String text = this.textEditor.getText();
             this.remove(this.textEditor);
             this.textEditor = null;
-            this.editedSetting = null;
+            this.editCommit = null;
+            commit.accept(text);
         }
     }
 
@@ -419,9 +431,28 @@ public final class ConfigUiScreen extends Screen {
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
+    /** Saves each config file that the screen's settings belong to, once each. */
+    private void saveConfigGroups() {
+        Set<ConfigGroup> groups = new LinkedHashSet<>();
+        for (ConfigUiSpec.Category category : this.spec.categories()) {
+            for (ConfigUiSpec.Section section : category.sections()) {
+                if (section.settings() == null) {
+                    continue;
+                }
+                for (UiSetting<?> setting : section.settings()) {
+                    if (setting.group() != null) {
+                        groups.add(setting.group());
+                    }
+                }
+            }
+        }
+        groups.forEach(ConfigGroup::save);
+    }
+
     @Override
     public void close() {
         this.commitTextEditor();
+        this.saveConfigGroups();
         this.spec.save().run();
         this.client.setScreen(this.parent);
     }

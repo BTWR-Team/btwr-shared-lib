@@ -3,6 +3,8 @@ package org.btwr.shared_library.gui.config;
 import net.minecraft.text.Text;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import org.btwr.shared_library.api.config.ConfigGroup;
+import org.btwr.shared_library.api.config.ConfigSetting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +15,7 @@ import java.util.function.Supplier;
 
 /**
  * One setting shown as a card. The screen picks the control from the type: a switch for Boolean, a
- * stepper for Integer and Double, a text box for String, and a cycling picker for enums. Min and max can
+ * stepper for Integer, Double and Float, a text box for String, and a cycling picker for enums. Min and max can
  * be null for no limit.
  */
 public final class UiSetting<T> {
@@ -33,6 +35,7 @@ public final class UiSetting<T> {
     private ItemStack icon = new ItemStack(Items.PAPER);
     private int step = 1;
     private final List<Lock> locks = new ArrayList<>();
+    private ConfigGroup group;
 
     public UiSetting(Class<T> type, Text name, Text description, T defaultValue, T min, T max, Supplier<T> getter, Consumer<T> setter) {
         this.type = type;
@@ -47,6 +50,39 @@ public final class UiSetting<T> {
 
     public static UiSetting<Boolean> toggle(Text name, Text description, boolean defaultValue, Supplier<Boolean> getter, Consumer<Boolean> setter) {
         return new UiSetting<>(Boolean.class, name, description, defaultValue, null, null, getter, setter);
+    }
+
+    /**
+     * A card for a setting made with {@code ConfigBuilder}. The type, default, min and max come from the
+     * setting, changes go straight into it, and the screen saves its config file when it closes.
+     */
+    public static <T> UiSetting<T> of(ConfigSetting<T> setting, Text name, Text description) {
+        UiSetting<T> ui = new UiSetting<>(setting.getType(), name, description, setting.getDefaultValue(),
+                setting.getMin(), setting.getMax(), setting::get, value -> setting.set(value, false));
+        ui.group = setting.getGroup();
+        if (setting.getType().isEnum()) {
+            ui.valueName = value -> Text.literal(readableName(((Enum<?>) value).name().toLowerCase()));
+        }
+        return ui;
+    }
+
+    /**
+     * Same as {@link #of(ConfigSetting, Text, Text)}, named from translation keys: {@code <prefix><key>} for
+     * the name and {@code <prefix>tooltip.<key>} for the description. Missing translations fall back to the
+     * setting's key, made readable, and its comment.
+     */
+    public static <T> UiSetting<T> of(ConfigSetting<T> setting, String translationPrefix) {
+        String key = setting.getKey();
+        String comment = setting.getComment() != null ? setting.getComment() : "";
+        return of(setting,
+                Text.translatableWithFallback(translationPrefix + key, readableName(key)),
+                Text.translatableWithFallback(translationPrefix + "tooltip." + key, comment));
+    }
+
+    /** How the values show on the card, e.g. a translated name for each enum constant. */
+    public UiSetting<T> valueName(Function<T, Text> valueName) {
+        this.valueName = valueName;
+        return this;
     }
 
     /** A picker that cycles through the enum's constants, shown with {@code valueName}. */
@@ -103,6 +139,11 @@ public final class UiSetting<T> {
             }
         }
         return name.toString();
+    }
+
+    /** The config group the setting saves into, or null when the mod saves it itself. */
+    ConfigGroup group() {
+        return this.group;
     }
 
     Class<T> type() {

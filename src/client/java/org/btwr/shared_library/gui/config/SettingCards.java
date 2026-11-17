@@ -10,12 +10,13 @@ import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import org.btwr.shared_library.api.config.TomlConfigManager;
+
+import java.awt.Color;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
 /**
  * Draws {@link UiSetting}s as cards, choosing the control from the setting's type.
@@ -28,13 +29,17 @@ class SettingCards implements Cards<UiSetting<?>> {
     private static final int SWITCH_WIDTH = 30;
     private static final int SWITCH_HEIGHT = 12;
     private static final Text DISABLED = Text.translatable("screen.config_ui.disabled");
-    private static final int MAX_DESCRIPTION_LINES = 3;
+    private static final int CARD_HEIGHT = 26;
     private static final int LINE_HEIGHT = 10;
+    private static final int SWATCH_SIZE = STEPPER_HEIGHT;
+    /** The colors a swatch steps through: pure white, then the dye colors in creative-tab order. */
+    private static final int[] PALETTE = {
+            0xFFFFFF, 0x9D9D97, 0x474F52, 0x1D1D21, 0x835432, 0xB02E26, 0xF9801D,
+            0xFED83D, 0x80C71F, 0x5E7C16, 0x169C9C, 0x3AB3DA, 0x3C44AA, 0x8932B8, 0xC74EBD, 0xF38BAA
+    };
 
     private final ConfigUiScreen screen;
     private final List<UiSetting<?>> settings;
-    /** Settings whose description didn't fit on the card when last drawn, so the tooltip shows it in full. */
-    private final Set<UiSetting<?>> cutDescriptions = new HashSet<>();
 
     SettingCards(ConfigUiScreen screen, List<UiSetting<?>> settings) {
         this.screen = screen;
@@ -51,15 +56,30 @@ class SettingCards implements Cards<UiSetting<?>> {
         return 3;
     }
 
+    /**
+     * Cards only show the name and the control; the description is in the tooltip. A long name wraps onto
+     * more lines, and every card is as tall as the longest name needs, so the rows stay even.
+     */
     @Override
     public int height(int cardWidth) {
-        // Every card in the grid is as tall as the longest description needs, so the rows stay even.
         TextRenderer font = MinecraftClient.getInstance().textRenderer;
         int lines = 1;
         for (UiSetting<?> setting : this.settings) {
-            lines = Math.max(lines, descriptionLines(font, setting, textWidth(setting, cardWidth)).size());
+            lines = Math.max(lines, nameLines(font, setting, textWidth(setting, cardWidth)).size());
         }
-        return 24 + lines * LINE_HEIGHT;
+        return Math.max(CARD_HEIGHT, lines * LINE_HEIGHT + 8);
+    }
+
+    /** The name wrapped to the text column. */
+    private static List<String> nameLines(TextRenderer font, UiSetting<?> setting, int width) {
+        List<String> lines = new ArrayList<>();
+        for (StringVisitable line : font.getTextHandler().wrapLines(setting.name().getString(), Math.max(1, width), Style.EMPTY)) {
+            lines.add(line.getString());
+        }
+        if (lines.isEmpty()) {
+            lines.add("");
+        }
+        return lines;
     }
 
     @Override
@@ -75,35 +95,11 @@ class SettingCards implements Cards<UiSetting<?>> {
         return cardWidth - 28 - controlWidth(setting) - 8;
     }
 
-    /** The description wrapped to the text column, cut short with "..." past the last line allowed. */
-    private static List<String> descriptionLines(TextRenderer font, UiSetting<?> setting, int width) {
-        List<String> lines = new ArrayList<>();
-        for (StringVisitable line : wrapDescription(font, setting, width)) {
-            lines.add(line.getString());
-        }
-
-        if (lines.isEmpty()) {
-            lines.add("");
-        }
-
-        if (lines.size() > MAX_DESCRIPTION_LINES) {
-            String rest = String.join(" ", lines.subList(MAX_DESCRIPTION_LINES - 1, lines.size()));
-            lines = new ArrayList<>(lines.subList(0, MAX_DESCRIPTION_LINES - 1));
-            lines.add(ConfigUiStyle.fit(font, rest, width));
-        }
-
-        return lines;
-    }
-
-    private static List<StringVisitable> wrapDescription(TextRenderer font, UiSetting<?> setting, int width) {
-        return font.getTextHandler().wrapLines(setting.description().getString(), Math.max(1, width), Style.EMPTY);
-    }
-
     private static int controlWidth(UiSetting<?> setting) {
         if (setting.type() == Boolean.class) {
             return SWITCH_WIDTH;
         }
-        return setting.type().isEnum() ? CHOICE_WIDTH : STEPPER_WIDTH;
+        return setting.type().isEnum() || setting.type() == Color.class ? CHOICE_WIDTH : STEPPER_WIDTH;
     }
 
     @Override
@@ -130,20 +126,10 @@ class SettingCards implements Cards<UiSetting<?>> {
         context.drawItem(setting.icon(), x + 7, y + (height - 16) / 2);
 
         int textWidth = textWidth(setting, width);
-        ConfigUiStyle.label(
-                context, font, ConfigUiStyle.fit(font, setting.name().getString(), textWidth),
-                x + 28, y + 7, locked ? ConfigUiStyle.TEXT_DISABLED : ConfigUiStyle.TEXT
-        );
-
-        if (wrapDescription(font, setting, textWidth).size() > MAX_DESCRIPTION_LINES) {
-            this.cutDescriptions.add(setting);
-        } else {
-            this.cutDescriptions.remove(setting);
-        }
-
-        int lineY = y + 19;
-        for (String line : descriptionLines(font, setting, textWidth)) {
-            ConfigUiStyle.label(context, font, line, x + 28, lineY, locked ? ConfigUiStyle.TEXT_DISABLED : ConfigUiStyle.TEXT_FAINT);
+        List<String> nameLines = nameLines(font, setting, textWidth);
+        int lineY = y + (height - nameLines.size() * LINE_HEIGHT + 2) / 2;
+        for (String line : nameLines) {
+            ConfigUiStyle.label(context, font, line, x + 28, lineY, locked ? ConfigUiStyle.TEXT_DISABLED : ConfigUiStyle.TEXT);
             lineY += LINE_HEIGHT;
         }
 
@@ -159,6 +145,11 @@ class SettingCards implements Cards<UiSetting<?>> {
             context.drawGuiTexture(
                     on ? ConfigUiStyle.SWITCH_ON : ConfigUiStyle.SWITCH_OFF,
                     x + width - SWITCH_WIDTH - 5, y + (height - SWITCH_HEIGHT) / 2, SWITCH_WIDTH, SWITCH_HEIGHT
+            );
+        } else if (setting.type() == Color.class) {
+            this.renderColor(
+                    context, font, (Color) setting.get(),
+                    x + width - CHOICE_WIDTH - 4, y + (height - STEPPER_HEIGHT) / 2, hovered, mouseX
             );
         } else if (setting.type() == String.class) {
             this.renderTextValue(
@@ -213,12 +204,46 @@ class SettingCards implements Cards<UiSetting<?>> {
         );
     }
 
+    /** A swatch of the color, then its hex code in a field. */
+    private void renderColor(DrawContext context, TextRenderer font, Color color, int x, int y, boolean hovered, int mouseX) {
+        boolean overSwatch = hovered && mouseX >= x && mouseX < x + SWATCH_SIZE;
+        ConfigUiStyle.outline(context, x, y, SWATCH_SIZE, SWATCH_SIZE, overSwatch ? ConfigUiStyle.ACCENT : ConfigUiStyle.LINE);
+        context.fill(x + 1, y + 1, x + SWATCH_SIZE - 1, y + SWATCH_SIZE - 1, ConfigUiStyle.BLACK);
+        if (color != null) {
+            context.fill(x + 2, y + 2, x + SWATCH_SIZE - 2, y + SWATCH_SIZE - 2, color.getRGB());
+        }
+
+        int fieldX = x + SWATCH_SIZE + 4;
+        int fieldWidth = CHOICE_WIDTH - SWATCH_SIZE - 4;
+        boolean overField = hovered && mouseX >= fieldX;
+        context.fill(fieldX, y, fieldX + fieldWidth, y + STEPPER_HEIGHT, ConfigUiStyle.FIELD);
+        ConfigUiStyle.outline(context, fieldX, y, fieldWidth, STEPPER_HEIGHT, overField ? ConfigUiStyle.ACCENT : ConfigUiStyle.LINE);
+        String hex = color != null ? TomlConfigManager.toHex(color) : "-";
+        ConfigUiStyle.label(context, font, hex, fieldX + (fieldWidth - font.getWidth(hex)) / 2, y + 4, ConfigUiStyle.TEXT);
+    }
+
+    /** Steps to the next palette color, or the one before. A color that isn't in the palette goes to its start. */
+    private static void cyclePalette(UiSetting<Color> setting, int steps) {
+        Color current = setting.get();
+        int index = -1;
+        for (int i = 0; i < PALETTE.length; i++) {
+            if (current != null && (current.getRGB() & 0xFFFFFF) == PALETTE[i]) {
+                index = i;
+                break;
+            }
+        }
+        int next = index < 0 ? 0 : Math.floorMod(index + Integer.signum(steps), PALETTE.length);
+        setting.set(new Color(PALETTE[next]));
+    }
+
     private static <T> String valueText(UiSetting<T> setting) {
         return setting.type().isEnum() ? setting.valueName(setting.get()).getString() : formatNumber(setting.get());
     }
 
     private static String formatNumber(Object value) {
-        return value instanceof Double number ? String.format(Locale.ROOT, "%.2f", number) : String.valueOf(value);
+        return value instanceof Double || value instanceof Float
+                ? String.format(Locale.ROOT, "%.2f", ((Number) value).doubleValue())
+                : String.valueOf(value);
     }
 
     @Override
@@ -242,6 +267,28 @@ class SettingCards implements Cards<UiSetting<?>> {
         int controlX = x + width - controlWidth - 4;
         if (setting.type() == String.class) {
             this.screen.editText((UiSetting<String>) setting, x + 28, y + (height - STEPPER_HEIGHT) / 2, width - 32);
+            return true;
+        }
+
+        if (setting.type() == Color.class) {
+            UiSetting<Color> color = (UiSetting<Color>) setting;
+            int controlY = y + (height - STEPPER_HEIGHT) / 2;
+            if (mouseX >= controlX && mouseX < controlX + SWATCH_SIZE) {
+                cyclePalette(color, Screen.hasShiftDown() ? -1 : 1);
+            } else if (mouseX >= controlX + SWATCH_SIZE) {
+                int fieldX = controlX + SWATCH_SIZE + 4;
+                String hex = color.get() != null ? TomlConfigManager.toHex(color.get()) : "";
+                this.screen.editText(color.name(), hex, 9, text -> {
+                    Color parsed = TomlConfigManager.parseColor(text);
+                    if (parsed != null) {
+                        color.set(parsed);
+                    } else if (!text.isBlank()) {
+                        this.screen.flash(Text.translatable("screen.config_ui.invalid_color", text));
+                    }
+                }, fieldX, controlY, controlX + controlWidth - fieldX);
+            } else {
+                return false;
+            }
             return true;
         }
 
@@ -291,19 +338,10 @@ class SettingCards implements Cards<UiSetting<?>> {
             number.set(value);
         } else if (setting.type() == Double.class) {
             UiSetting<Double> number = (UiSetting<Double>) setting;
-
-            // Rounded so repeated steps don't build up values like 0.30000000000000004.
-            double value = Math.round((number.get() + steps * doubleStep(number)) * 1000.0) / 1000.0;
-
-            if (number.min() != null) {
-                value = Math.max(value, number.min());
-            }
-
-            if (number.max() != null) {
-                value = Math.min(value, number.max());
-            }
-
-            number.set(value);
+            number.set(stepDecimal(number, steps));
+        } else if (setting.type() == Float.class) {
+            UiSetting<Float> number = (UiSetting<Float>) setting;
+            number.set((float) stepDecimal(number, steps));
         } else if (setting.type().isEnum()) {
             cycle(setting, steps);
         }
@@ -316,9 +354,27 @@ class SettingCards implements Cards<UiSetting<?>> {
         setting.set(values[Math.floorMod(index, values.length)]);
     }
 
+    /** The next value of a Double or Float stepper, kept within its min and max. */
+    private static <T extends Number> double stepDecimal(UiSetting<T> number, int steps) {
+        // Rounded so repeated steps don't build up values like 0.30000000000000004.
+        double value = Math.round((number.get().doubleValue() + steps * decimalStep(number)) * 1000.0) / 1000.0;
+
+        if (number.min() != null) {
+            value = Math.max(value, number.min().doubleValue());
+        }
+
+        if (number.max() != null) {
+            value = Math.min(value, number.max().doubleValue());
+        }
+
+        return value;
+    }
+
     /** A twentieth of the range when there is one, so any range takes the same number of clicks. */
-    private static double doubleStep(UiSetting<Double> setting) {
-        return setting.min() != null && setting.max() != null ? (setting.max() - setting.min()) / 20.0 : 0.1;
+    private static <T extends Number> double decimalStep(UiSetting<T> setting) {
+        return setting.min() != null && setting.max() != null
+                ? (setting.max().doubleValue() - setting.min().doubleValue()) / 20.0
+                : 0.1;
     }
 
     @Override
@@ -328,9 +384,17 @@ class SettingCards implements Cards<UiSetting<?>> {
             this.screen.flash(setting.lockReason());
         } else if (setting.type() == Boolean.class) {
             toggle((UiSetting<Boolean>) setting);
+        } else if (setting.type() == Color.class) {
+            cyclePalette((UiSetting<Color>) setting, shift ? -1 : 1);
         } else if (setting.type() != String.class) {
             step(setting, shift ? -1 : 1);
         }
+    }
+
+    /** No tooltip while the mouse is on the control, so it doesn't cover what's being changed. */
+    @Override
+    public boolean showsTooltipAt(UiSetting<?> setting, int x, int y, int width, int height, int mouseX, int mouseY) {
+        return mouseX < x + width - controlWidth(setting) - 6;
     }
 
     @Override
@@ -342,8 +406,7 @@ class SettingCards implements Cards<UiSetting<?>> {
     public List<Text> tooltip(UiSetting<?> setting) {
         List<Text> lines = new ArrayList<>();
         lines.add(setting.name());
-        // The card already shows the description, so it's only repeated here when the card had to cut it short.
-        if (this.cutDescriptions.contains(setting)) {
+        if (!setting.description().getString().isEmpty()) {
             lines.add(setting.description().copy().formatted(Formatting.GRAY));
         }
         lines.add(
@@ -364,6 +427,10 @@ class SettingCards implements Cards<UiSetting<?>> {
             );
         }
 
+        if (setting.type() == Color.class) {
+            lines.add(Text.translatable("screen.config_ui.color_hint").formatted(Formatting.DARK_GRAY));
+        }
+
         if (setting.isLocked()) {
             lines.add(setting.lockReason().copy().formatted(Formatting.GOLD));
         }
@@ -375,6 +442,9 @@ class SettingCards implements Cards<UiSetting<?>> {
         T value = setting.defaultValue();
         if (setting.type().isEnum()) {
             return setting.valueName(value);
+        }
+        if (value instanceof Color color) {
+            return TomlConfigManager.toHex(color);
         }
         return value instanceof Boolean on ? (on ? ScreenTexts.ON : ScreenTexts.OFF) : formatNumber(value);
     }

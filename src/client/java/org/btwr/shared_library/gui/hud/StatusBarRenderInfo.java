@@ -2,13 +2,12 @@ package org.btwr.shared_library.gui.hud;
 
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.player.PlayerEntity;
-import org.btwr.shared_library.BTWRSLModClient;
+import org.btwr.shared_library.config.BTWRSLModConfig;
 
 /**
  * Contains information on which vanilla status bar is currently being rendered
  */
 public class StatusBarRenderInfo {
-
     static boolean renderingFood, renderingMountHealth, renderingArmor, renderingAir = false;
 
     private static final StatusBarRenderInfo INSTANCE = new StatusBarRenderInfo();
@@ -37,7 +36,7 @@ public class StatusBarRenderInfo {
         if (
             // Explicit compat checks here
                 FabricLoader.getInstance().isModLoaded("granular-hunger") ||
-                        BTWRSLModClient.getSettings().isHungerOffsetEnabled()
+                        BTWRSLModConfig.doHungerOffsetOverride.get()
         )
             renderingFood = true;
     }
@@ -50,5 +49,4 @@ public class StatusBarRenderInfo {
     public void setRenderingAir(boolean value) {
         renderingAir = value;
     }
-
 }
