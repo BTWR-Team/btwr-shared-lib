@@ -32,6 +32,11 @@ interface Cards<T> {
 
     List<Text> tooltip(T item);
 
+    /** Whether the tooltip shows with the mouse at this spot on the card. */
+    default boolean showsTooltipAt(T item, int x, int y, int width, int height, int mouseX, int mouseY) {
+        return true;
+    }
+
     /** A line for the footer while the card is hovered. */
     Text hint(T item);
 

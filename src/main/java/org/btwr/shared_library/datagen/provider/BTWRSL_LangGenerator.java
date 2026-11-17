@@ -9,7 +9,6 @@ import net.minecraft.registry.tag.TagKey;
 import java.util.concurrent.CompletableFuture;
 
 public class BTWRSL_LangGenerator extends FabricLanguageProvider {
-
     public BTWRSL_LangGenerator(FabricDataOutput dataOutput, CompletableFuture<RegistryWrapper.WrapperLookup> registryLookup) {
         super(dataOutput, registryLookup);
     }
@@ -36,6 +35,8 @@ public class BTWRSL_LangGenerator extends FabricLanguageProvider {
         tb.add("screen.config_ui.copy_hint", "Click to tick, right-click to copy the ID");
         tb.add("screen.config_ui.locked", "Set by the server you're connected to");
         tb.add("screen.config_ui.disabled", "Disabled");
+        tb.add("screen.config_ui.invalid_color", "Not a hex color: %s");
+        tb.add("screen.config_ui.color_hint", "Click the swatch to pick a color, or the code to type one");
     }
 
     protected void addTagNames(TranslationBuilder tb) {
@@ -135,5 +136,4 @@ public class BTWRSL_LangGenerator extends FabricLanguageProvider {
     protected void addConfigAnchor(String key, String value, TranslationBuilder tb) {
         tb.add("config.btwrsl.draw_mode.anchor." + key, value);
     }
-
 }

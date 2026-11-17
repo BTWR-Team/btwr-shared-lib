@@ -1,6 +1,17 @@
 ## UNFINISHED
 + [WIP] General code cleanup: Refactored a lot of mixin class names and interface names from the .api package for better readability and self-explanation of what they're used for
 
+### v0.9.1(dev)
++ Added "enumSetting", "floatSetting" and "colorSetting" to ConfigBuilder
++ Added "UiSetting.of" for showing settings made with ConfigBuilder on a config screen. The card takes its type, default, and range from the setting and changes it directly, so mods don't write their own getters, setters, or save code
++ Added a color card to the config screen: a swatch that steps through the dye colors when clicked, and a hex code that can be typed in
++ Added "toHex" and "parseColor" to TomlConfigManager for turning colors into hex codes and back
++ Changed config screens to save the config file of every ConfigBuilder setting they show when they close. ConfigUiSpec no longer needs a save callback for them, which is now only for settings a mod stores on its own
++ Changed the mod's own client settings to use the config API ("BTWRSLModConfig"), saved in "config/btwr_sl/btwr_sl_common.toml". Settings from the old "btwrsl_common.json" file aren't carried over
++ Changed config screen setting cards to be thinner and only show the setting's name, which wraps onto more lines when it's long. Its description now only shows in the tooltip, which no longer shows while hovering the control that changes the setting
++ Fixed float settings not changing when clicking + or - on the config screen
++ Fixed enum and float settings not loading from their TOML config files
+
 ### v0.9
 + Added a generic config screen kit in gui/config ("ConfigUiScreen"). A mod describes its settings in a "ConfigUiSpec" and gets a searchable screen that reflows with the game window, with no screen class of its own
 + Added a new registry class "GrazeBehaviorRegistry" for defining what happens when animals graze on a block. Behaviors have priorities, so other mods can override the defaults

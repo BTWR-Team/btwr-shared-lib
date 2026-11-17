@@ -1,13 +1,12 @@
 package org.btwr.shared_library.gui.hud;
 
 import org.btwr.shared_library.BTWRSLMod;
-import org.btwr.shared_library.BTWRSLModClient;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
-import org.btwr.shared_library.config.BTWRSLSettings;
+import org.btwr.shared_library.config.BTWRSLModConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +16,6 @@ import java.util.TreeMap;
  * Handles rendering of penalties, and their hierarchy
  */
 public class PenaltyDisplayManager {
-
     /**
      * Instance of PenaltyDisplayManager
      */
@@ -147,8 +145,8 @@ public class PenaltyDisplayManager {
         int hungerBarY = context.getScaledWindowHeight() - 39; // Hunger bar position vertically
 
         // Add override if applicable
-        hungerBarX += getSettings().getRenderXOffset();
-        hungerBarY -= getSettings().getRenderYOffset();
+        hungerBarX += BTWRSLModConfig.renderXOffset.get();
+        hungerBarY -= BTWRSLModConfig.renderYOffset.get();
 
         // Get y position to start drawing penalties
         int textY = this.getTextY(player, hungerBarY);
@@ -179,12 +177,12 @@ public class PenaltyDisplayManager {
         int renderX = drawMode.getX(context);
         int renderY = drawMode.getY(context);
         int offsetY = 0;
-        int margin = getSettings().getRenderMargin();
+        int margin = BTWRSLModConfig.renderMargin.get();
 
         // Add offsets if applicable
-        renderX += getSettings().getRenderXOffset();
+        renderX += BTWRSLModConfig.renderXOffset.get();
         renderX += drawMode.getXMargin(margin);
-        renderY -= getSettings().getRenderYOffset();
+        renderY -= BTWRSLModConfig.renderYOffset.get();
         renderY += drawMode.getYMargin(margin);
 
         // Begin drawing
@@ -257,19 +255,11 @@ public class PenaltyDisplayManager {
     }
 
     /**
-     * Readability wrapper for settings getter
-     * @return Mod settings
-     */
-    private BTWRSLSettings getSettings() {
-        return BTWRSLModClient.getSettings();
-    }
-
-    /**
      * Readability wrapper for draw mode
      * @return Current draw mode
      */
     private PenaltyDrawMode getDrawMode() {
-        return BTWRSLModClient.getSettings().getDrawMode();
+        return BTWRSLModConfig.drawMode.get();
     }
 
     /**
@@ -318,5 +308,4 @@ public class PenaltyDisplayManager {
             return new HudRenderInfo(hungerBarY, StatusBarRenderInfo.getInstance().getRenderingFood());
         }
     }
-
 }
