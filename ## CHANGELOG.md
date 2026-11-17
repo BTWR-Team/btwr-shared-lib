@@ -1,7 +1,7 @@
 ## UNFINISHED
 + [WIP] General code cleanup: Refactored a lot of mixin class names and interface names from the .api package for better readability and self-explanation of what they're used for
 
-### v0.9.1(dev)
+### v0.9.1
 + Added "enumSetting", "floatSetting" and "colorSetting" to ConfigBuilder
 + Added "UiSetting.of" for showing settings made with ConfigBuilder on a config screen. The card takes its type, default, and range from the setting and changes it directly, so mods don't write their own getters, setters, or save code
 + Added a color card to the config screen: a swatch that steps through the dye colors when clicked, and a hex code that can be typed in
