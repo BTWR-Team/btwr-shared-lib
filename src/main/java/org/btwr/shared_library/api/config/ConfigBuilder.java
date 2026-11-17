@@ -1,9 +1,9 @@
 package org.btwr.shared_library.api.config;
 
+import java.awt.*;
 import java.util.function.BiConsumer;
 
 public class ConfigBuilder<T> {
-
     private String key;
     private T defaultValue;
     private T minValue;
@@ -24,12 +24,24 @@ public class ConfigBuilder<T> {
         return new ConfigBuilder<>(Double.class).key(key);
     }
 
+    public static ConfigBuilder<Float> floatSetting(String key) {
+        return new ConfigBuilder<>(Float.class).key(key);
+    }
+
     public static ConfigBuilder<Boolean> booleanSetting(String key) {
         return new ConfigBuilder<>(Boolean.class).key(key);
     }
 
+    public static <E extends Enum<E>> ConfigBuilder<E> enumSetting(String key, Class<E> enumClass) {
+        return new ConfigBuilder<>(enumClass).key(key);
+    }
+
     public static ConfigBuilder<String> stringSetting(String key) {
         return new ConfigBuilder<>(String.class).key(key);
+    }
+
+    public static ConfigBuilder<Color> colorSetting(String key) {
+        return new ConfigBuilder<>(Color.class).key(key);
     }
 
     public ConfigBuilder<T> key(String key) {
@@ -65,5 +77,4 @@ public class ConfigBuilder<T> {
     public ConfigSetting<T> build() {
         return new ConfigSetting<>(key, defaultValue, minValue, maxValue, comment, type, onChange);
     }
-
 }

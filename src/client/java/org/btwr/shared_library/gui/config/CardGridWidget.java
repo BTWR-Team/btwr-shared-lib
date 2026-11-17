@@ -121,7 +121,10 @@ class CardGridWidget<T> extends ClickableWidget {
             );
         }
 
-        if (this.hoveredItem != null) {
+        int hoveredOffset = hoveredIndex - first;
+        if (this.hoveredItem != null && this.cards.showsTooltipAt(this.hoveredItem,
+                this.cardX(hoveredOffset % this.columns), this.cardY(hoveredOffset / this.columns),
+                this.cardWidth, this.cardHeight, mouseX, mouseY)) {
             List<OrderedText> lines = new ArrayList<>();
 
             for (Text line : this.cards.tooltip(this.hoveredItem)) {
